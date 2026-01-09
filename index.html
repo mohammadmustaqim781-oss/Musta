@@ -2,352 +2,357 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Noor Elite - Grand Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Noor Celestial</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
-            --emerald-glow: #10b981;
-            --bg-deep: #020617;
+            --emerald: #10b981;
+            --gold: #fbbf24;
+            --cosmic-dark: #020617;
         }
         
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: var(--bg-deep); 
+            background-color: var(--cosmic-dark); 
             color: #f8fafc; 
             margin: 0;
             height: 100vh;
             overflow: hidden; 
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Glassmorphism Classes */
-        .glass-panel { 
-            background: rgba(15, 23, 42, 0.7); 
-            backdrop-filter: blur(24px); 
-            border: 1px solid rgba(16, 185, 129, 0.2); 
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        /* 3D Background Canvas */
+        #bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.6; }
+
+        /* Aurora Glassmorphism */
+        .aurora-glass {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
         }
 
-        .arabic { font-family: 'Amiri', serif; font-size: 2.2rem; line-height: 1.6; color: #fbbf24; }
+        .main-container { flex: 1; overflow-y: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; padding-bottom: 120px; z-index: 10; position: relative; }
+        .main-container::-webkit-scrollbar { display: none; }
 
-        /* Smooth Scroll Fix */
-        .main-viewport { 
-            flex: 1; 
-            overflow-y: auto; 
-            overflow-x: hidden;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch; 
-            padding-bottom: 140px; 
+        .tab-view { display: none; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .tab-view.active { display: block; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .arabic { font-family: 'Amiri', serif; font-size: 2.4rem; color: var(--gold); text-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+
+        /* Floating Nav Button */
+        .nav-btn { position: relative; transition: all 0.3s ease; }
+        .nav-btn.active-tab { color: var(--emerald); }
+        .nav-btn.active-tab::after {
+            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 4px; background: var(--emerald); border-radius: 50%;
+            box-shadow: 0 0 8px var(--emerald);
         }
 
-        /* Custom Scrollbar */
-        .main-viewport::-webkit-scrollbar { width: 4px; }
-        .main-viewport::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.3); border-radius: 10px; }
+        /* Tasbih Ripple Effect */
+        .tasbih-core {
+            width: 280px; height: 280px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s ease;
+        }
+        .tasbih-core:active { transform: scale(0.95); }
 
-        .tab-content { display: none; transform: translateY(10px); opacity: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tab-content.active { display: block; transform: translateY(0); opacity: 1; }
-
-        /* Pulse and Animations */
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); } 50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.5); } }
-        .active-glow { animation: glow 3s infinite; }
-
-        .btn-active:active { transform: scale(0.96); }
-
-        .nav-icon-active { color: var(--emerald-glow); filter: drop-shadow(0 0 10px rgba(16,185,129,0.8)); }
-        
-        /* Floating Message Bubbles */
-        .bubble { position: relative; animation: bubbleIn 0.4s ease-out; }
-        @keyframes bubbleIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .habit-pill { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.05); }
+        .habit-pill.checked { background: rgba(16, 185, 129, 0.15); border-color: var(--emerald); }
     </style>
 </head>
 <body class="flex items-center justify-center">
 
-    <!-- App Container -->
-    <div class="w-full max-w-md h-screen flex flex-col relative bg-slate-950 border-x border-emerald-900/20">
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- App Wrapper -->
+    <div class="w-full max-w-md h-screen flex flex-col relative overflow-hidden bg-transparent">
         
-        <!-- Premium Header -->
-        <header class="shrink-0 pt-8 px-6 pb-4 flex items-center justify-between z-50 bg-slate-950/80 backdrop-blur-md">
+        <!-- Top Visual Header -->
+        <header class="shrink-0 p-8 flex items-center justify-between z-50">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                    <span class="text-2xl">✨</span>
+                <div class="w-10 h-10 rounded-full border border-emerald-500/30 flex items-center justify-center bg-emerald-500/10">
+                    <span class="text-xl">🕌</span>
                 </div>
-                <div>
-                    <h1 class="text-xl font-black tracking-tighter">NOOR <span class="text-emerald-400">ELITE</span></h1>
-                    <div class="flex items-center gap-2">
-                        <span class="relative flex h-2 w-2">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        <p class="text-[9px] font-bold uppercase tracking-widest text-emerald-500/70">Master Engine Active</p>
-                    </div>
-                </div>
+                <h1 class="text-xl font-extrabold tracking-tighter">NOOR <span class="text-emerald-400">CELESTIAL</span></h1>
             </div>
-            <button onclick="switchTab('knowledge')" class="w-10 h-10 glass-panel rounded-full flex items-center justify-center text-emerald-400 border-none">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <button onclick="switchTab('journal')" class="p-2 aurora-glass rounded-xl text-emerald-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
             </button>
         </header>
 
-        <!-- Main Content (Scrollable) -->
-        <div class="main-viewport" id="scroll-target">
+        <!-- Dynamic Content Area -->
+        <main class="main-container px-6" id="app-view">
             
-            <!-- HOME DASHBOARD -->
-            <div id="home" class="tab-content active p-6 space-y-6">
-                <!-- Highlight Card -->
-                <div class="glass-panel p-8 rounded-[2.5rem] relative overflow-hidden active-glow">
-                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl"></div>
-                    <p class="arabic text-right mb-6" id="verse-arabic">إِنَّ مَعَ الْعُسْرِ يُسْرًا</p>
-                    <p class="text-slate-200 text-lg font-medium italic" id="verse-translation">"Indeed, with hardship comes ease."</p>
-                    <div class="mt-6 flex items-center gap-3">
-                        <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-widest border border-emerald-500/20">Daily Verse</span>
+            <!-- HOME VIEW -->
+            <section id="home" class="tab-view active space-y-8">
+                <div class="aurora-glass p-8 rounded-[2.5rem] relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/0 via-emerald-500/40 to-emerald-500/0"></div>
+                    <p class="arabic text-center mb-6">اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ</p>
+                    <p class="text-center text-slate-300 text-sm italic font-medium">"Allah is the Light of the heavens and the earth."</p>
+                    <div class="mt-8 flex justify-center">
+                        <span class="text-[10px] uppercase tracking-[0.3em] text-emerald-500 font-bold px-4 py-1 rounded-full bg-emerald-500/10">Surah An-Nur 24:35</span>
                     </div>
                 </div>
 
-                <!-- Action Grid -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div onclick="switchTab('chat')" class="glass-panel p-6 rounded-[2rem] flex flex-col items-center gap-4 btn-active border-emerald-500/10">
-                        <div class="w-14 h-14 bg-emerald-400/10 rounded-2xl flex items-center justify-center text-2xl">🤖</div>
-                        <span class="text-xs font-black uppercase tracking-widest text-emerald-400">Ask Scholar</span>
-                    </div>
-                    <div onclick="switchTab('tasbih')" class="glass-panel p-6 rounded-[2rem] flex flex-col items-center gap-4 btn-active border-emerald-500/10">
-                        <div class="w-14 h-14 bg-amber-400/10 rounded-2xl flex items-center justify-center text-2xl">📿</div>
-                        <span class="text-xs font-black uppercase tracking-widest text-amber-400">Dhikr Lab</span>
-                    </div>
-                </div>
-
-                <!-- Progress Tracker -->
-                <div class="glass-panel p-6 rounded-[2rem]">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-500">Prayer Tracker</h3>
-                        <span class="text-[10px] text-emerald-400 font-bold" id="prayer-count">0/5 Completed</span>
-                    </div>
-                    <div class="flex justify-between gap-2">
-                        <button onclick="togglePrayer(this)" class="flex-1 py-4 glass-panel rounded-2xl text-[10px] font-bold border-emerald-900/20">Fajr</button>
-                        <button onclick="togglePrayer(this)" class="flex-1 py-4 glass-panel rounded-2xl text-[10px] font-bold border-emerald-900/20">Dhuhr</button>
-                        <button onclick="togglePrayer(this)" class="flex-1 py-4 glass-panel rounded-2xl text-[10px] font-bold border-emerald-900/20">Asr</button>
-                        <button onclick="togglePrayer(this)" class="flex-1 py-4 glass-panel rounded-2xl text-[10px] font-bold border-emerald-900/20">Maghrib</button>
-                        <button onclick="togglePrayer(this)" class="flex-1 py-4 glass-panel rounded-2xl text-[10px] font-bold border-emerald-900/20">Isha</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI CHAT -->
-            <div id="chat" class="tab-content p-6 min-h-full">
-                <div id="chat-messages" class="space-y-6">
-                    <div class="bubble flex justify-start">
-                        <div class="glass-panel p-5 rounded-[1.5rem] rounded-bl-none max-w-[90%] text-sm leading-relaxed border-none">
-                            Assalamu Alaikum, I am your elite AI guide. I use your dedicated key for fast, high-quality responses. How can I help?
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TASBIH LAB -->
-            <div id="tasbih" class="tab-content p-6 h-full">
-                <div class="flex flex-col items-center justify-center py-10 space-y-12">
-                    <div class="text-center">
-                        <div id="tasbih-val" class="text-9xl font-black tracking-tighter text-white">0</div>
-                        <div id="tasbih-target" class="text-emerald-500 font-bold text-[10px] tracking-[0.4em] uppercase mt-2">Cycle: SubhanAllah</div>
-                    </div>
-                    
-                    <div onclick="vibrateCount()" class="w-64 h-64 rounded-full glass-panel border-[1px] border-emerald-500/30 flex items-center justify-center active:scale-90 transition-all cursor-pointer shadow-[0_0_80px_-20px_rgba(16,185,129,0.3)]">
-                        <div class="w-56 h-56 rounded-full bg-slate-950 flex flex-col items-center justify-center border border-emerald-500/10">
-                             <span class="text-emerald-400 font-black tracking-widest text-sm">TAP TO DHIKR</span>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-10">
-                        <button onclick="resetCount()" class="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-slate-800 pb-1">Reset</button>
-                        <button onclick="toggleVibrate()" id="vibe-status" class="text-emerald-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-emerald-900/50 pb-1">Vibe: ON</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- KNOWLEDGE HUB -->
-            <div id="knowledge" class="tab-content p-6 space-y-6">
-                <h2 class="text-2xl font-black tracking-tight">Knowledge Hub</h2>
+                <!-- Sunnah Habit Tracker -->
                 <div class="space-y-4">
-                    <div onclick="askAI('Tell me a powerful Dua for anxiety')" class="glass-panel p-6 rounded-3xl flex items-center justify-between btn-active">
-                        <div class="flex gap-4 items-center">
-                            <span class="text-2xl">🛡️</span>
-                            <span class="font-bold text-sm">Protection Duas</span>
+                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-500 px-2">Sunnah Habits</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div onclick="toggleHabit(this)" class="habit-pill aurora-glass p-5 rounded-3xl flex flex-col gap-3 cursor-pointer">
+                            <span class="text-2xl">💧</span>
+                            <span class="text-xs font-bold">Wudu before sleep</span>
                         </div>
-                        <span class="text-emerald-500">→</span>
-                    </div>
-                    <div onclick="askAI('What are the rules of Zakat?')" class="glass-panel p-6 rounded-3xl flex items-center justify-between btn-active">
-                        <div class="flex gap-4 items-center">
-                            <span class="text-2xl">💰</span>
-                            <span class="font-bold text-sm">Zakat Guidance</span>
+                        <div onclick="toggleHabit(this)" class="habit-pill aurora-glass p-5 rounded-3xl flex flex-col gap-3 cursor-pointer">
+                            <span class="text-2xl">☕</span>
+                            <span class="text-xs font-bold">Right-hand drinking</span>
                         </div>
-                        <span class="text-emerald-500">→</span>
-                    </div>
-                    <div onclick="askAI('Explain the importance of Tahajjud')" class="glass-panel p-6 rounded-3xl flex items-center justify-between btn-active">
-                        <div class="flex gap-4 items-center">
-                            <span class="text-2xl">✨</span>
-                            <span class="font-bold text-sm">Tahajjud Merit</span>
+                        <div onclick="toggleHabit(this)" class="habit-pill aurora-glass p-5 rounded-3xl flex flex-col gap-3 cursor-pointer">
+                            <span class="text-2xl">📖</span>
+                            <span class="text-xs font-bold">Surah Mulk Nightly</span>
                         </div>
-                        <span class="text-emerald-500">→</span>
+                        <div onclick="toggleHabit(this)" class="habit-pill aurora-glass p-5 rounded-3xl flex flex-col gap-3 cursor-pointer">
+                            <span class="text-2xl">🌙</span>
+                            <span class="text-xs font-bold">Morning Athkar</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Float Input (Chat Only) -->
-        <div id="input-container" class="hidden absolute bottom-28 left-6 right-6 z-[60]">
-            <div class="glass-panel rounded-[2rem] p-2 flex items-center gap-2 border-emerald-500/40">
-                <input id="ai-input" type="text" placeholder="Message Noor Elite..." class="flex-1 bg-transparent px-5 py-4 text-sm outline-none font-medium">
-                <button onclick="handleSend()" class="w-12 h-12 bg-emerald-500 text-slate-950 rounded-[1.5rem] flex items-center justify-center btn-active">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            <!-- CHAT VIEW -->
+            <section id="chat" class="tab-view space-y-6 min-h-full">
+                <div id="chat-messages" class="space-y-6 pt-4">
+                    <div class="flex justify-start">
+                        <div class="aurora-glass p-5 rounded-[1.8rem] rounded-bl-none max-w-[90%] text-sm leading-relaxed">
+                            Welcome, Seeker. How can I illuminate your path today with Quranic wisdom?
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DHIKR VIEW -->
+            <section id="dhikr" class="tab-view h-full flex flex-col items-center justify-center">
+                <div class="text-center mb-10">
+                    <h2 id="dhikr-title" class="text-xs font-black tracking-[0.4em] text-emerald-400 uppercase">SubhanAllah</h2>
+                    <p id="dhikr-counter" class="text-8xl font-black text-white mt-4 tracking-tighter">0</p>
+                </div>
+                
+                <div onclick="handleDhikr()" class="tasbih-core cursor-pointer relative">
+                    <div class="absolute inset-0 rounded-full border border-emerald-500/20 animate-pulse"></div>
+                    <div class="w-56 h-56 rounded-full bg-slate-900/50 border border-emerald-500/20 flex items-center justify-center">
+                        <div class="w-48 h-48 rounded-full border border-emerald-500/10 flex items-center justify-center">
+                            <span class="text-[10px] font-black tracking-widest text-emerald-500">GLORY TO ALLAH</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-12 flex gap-8">
+                    <button onclick="resetDhikr()" class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Reset</button>
+                    <div class="w-px h-4 bg-slate-800"></div>
+                    <button onclick="toggleDhikrAuto()" id="auto-btn" class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Auto Mode: Off</button>
+                </div>
+            </section>
+
+            <!-- JOURNAL VIEW -->
+            <section id="journal" class="tab-view space-y-6">
+                <h2 class="text-2xl font-black italic">Reflections</h2>
+                <div class="aurora-glass p-6 rounded-[2rem] space-y-4">
+                    <textarea id="journal-input" placeholder="What are you grateful for today?" class="w-full bg-transparent border-none outline-none text-sm min-h-[150px] resize-none"></textarea>
+                    <button onclick="saveJournal()" class="w-full bg-emerald-600/20 text-emerald-400 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest border border-emerald-500/20">Record Reflection</button>
+                </div>
+                <div id="journal-list" class="space-y-3 pb-20">
+                    <!-- Saved journals appear here -->
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Floating Chat Input -->
+        <div id="chat-bar" class="hidden absolute bottom-28 left-6 right-6 z-50">
+            <div class="aurora-glass rounded-[2rem] p-2 flex items-center border-white/5 shadow-2xl">
+                <input id="ai-input" type="text" placeholder="Ask anything..." class="flex-1 bg-transparent px-5 py-4 text-sm outline-none">
+                <button onclick="sendAI()" class="w-12 h-12 bg-emerald-500 text-slate-950 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
                 </button>
             </div>
         </div>
 
         <!-- Navigation Dock -->
-        <nav class="shrink-0 h-24 glass-panel border-t-0 rounded-t-[3rem] flex items-center justify-around px-8 pb-4 z-[70]">
-            <button onclick="switchTab('home')" class="nav-btn transition-all duration-300 nav-icon-active" id="nav-home">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        <nav class="shrink-0 h-24 aurora-glass border-none rounded-t-[3rem] flex items-center justify-around px-8 pb-4 z-50">
+            <button onclick="switchTab('home')" class="nav-btn active-tab" id="btn-home">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
             </button>
-            <button onclick="switchTab('chat')" class="nav-btn text-slate-600 transition-all duration-300" id="nav-chat">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+            <button onclick="switchTab('chat')" class="nav-btn text-slate-500" id="btn-chat">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
             </button>
-            <button onclick="switchTab('tasbih')" class="nav-btn text-slate-600 transition-all duration-300" id="nav-tasbih">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <button onclick="switchTab('dhikr')" class="nav-btn text-slate-500" id="btn-dhikr">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </button>
         </nav>
     </div>
 
     <script>
         const apiKey = "AIzaSyB5spR0BCO12vGTbBCtFOC_PbKteK7fk7g";
-        let count = parseInt(localStorage.getItem('noor_tasbih_val')) || 0;
-        let isVibe = true;
-        let prayerScore = 0;
+        let dhikrCount = parseInt(localStorage.getItem('noor_dhikr')) || 0;
+        let journals = JSON.parse(localStorage.getItem('noor_journals')) || [];
 
-        // Initialize
-        document.getElementById('tasbih-val').innerText = count;
+        // --- BACKGROUND STARS ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
 
-        function switchTab(id) {
-            // UI Logic
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.replace('nav-icon-active', 'text-slate-600'));
-            
-            document.getElementById(id).classList.add('active');
-            const nav = document.getElementById('nav-' + id);
-            if(nav) nav.classList.add('nav-icon-active');
-
-            // Input Logic
-            const input = document.getElementById('input-container');
-            id === 'chat' ? input.classList.remove('hidden') : input.classList.add('hidden');
-            
-            // Scroll Logic
-            document.getElementById('scroll-target').scrollTop = 0;
-        }
-
-        function vibrateCount() {
-            count++;
-            document.getElementById('tasbih-val').innerText = count;
-            localStorage.setItem('noor_tasbih_val', count);
-
-            // Cycle through phrases every 33
-            const phrases = ["SubhanAllah", "Alhamdulillah", "Allahu Akbar", "La ilaha illallah"];
-            const currentIdx = Math.floor((count % 132) / 33);
-            document.getElementById('tasbih-target').innerText = `Cycle: ${phrases[currentIdx]}`;
-
-            if(isVibe && navigator.vibrate) {
-                if(count % 33 === 0) navigator.vibrate([100, 50, 100]);
-                else navigator.vibrate(25);
+        function initStars() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for(let i=0; i<150; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.5,
+                    speed: Math.random() * 0.2
+                });
             }
         }
 
-        function resetCount() {
-            count = 0;
-            document.getElementById('tasbih-val').innerText = 0;
-            localStorage.setItem('noor_tasbih_val', 0);
+        function animateStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#fff";
+            stars.forEach(s => {
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+                s.y -= s.speed;
+                if(s.y < 0) s.y = canvas.height;
+            });
+            requestAnimationFrame(animateStars);
         }
 
-        function toggleVibrate() {
-            isVibe = !isVibe;
-            const btn = document.getElementById('vibe-status');
-            btn.innerText = `Vibe: ${isVibe ? 'ON' : 'OFF'}`;
-            btn.classList.toggle('text-emerald-500');
-            btn.classList.toggle('text-slate-600');
-        }
+        initStars();
+        animateStars();
 
-        function togglePrayer(btn) {
-            btn.classList.toggle('bg-emerald-500/20');
-            btn.classList.toggle('border-emerald-500/50');
-            btn.classList.toggle('text-emerald-400');
+        // --- CORE LOGIC ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab', 'text-slate-500'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.add('text-slate-500'));
+
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('btn-' + (tabId === 'journal' ? 'home' : tabId))?.classList.add('active-tab');
+            document.getElementById('btn-' + (tabId === 'journal' ? 'home' : tabId))?.classList.remove('text-slate-500');
+
+            document.getElementById('chat-bar').classList.toggle('hidden', tabId !== 'chat');
+            document.getElementById('app-view').scrollTop = 0;
             
-            const active = document.querySelectorAll('.bg-emerald-500\\/20').length;
-            document.getElementById('prayer-count').innerText = `${active}/5 Completed`;
+            if(tabId === 'journal') renderJournals();
         }
 
-        function addBubble(role, text) {
-            const container = document.getElementById('chat-messages');
-            const wrap = document.createElement('div');
-            wrap.className = `bubble flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            
-            const content = `<div class="p-5 rounded-[1.8rem] ${role === 'user' ? 'bg-emerald-600 text-white rounded-br-none' : 'glass-panel rounded-bl-none'} max-w-[90%] text-sm leading-relaxed border-none">
-                ${text.replace(/\n/g, '<br>')}
-            </div>`;
-            
-            wrap.innerHTML = content;
-            container.appendChild(wrap);
-            
-            const view = document.getElementById('scroll-target');
-            view.scrollTo({ top: view.scrollHeight, behavior: 'smooth' });
+        function handleDhikr() {
+            dhikrCount++;
+            updateDhikrUI();
+            if(navigator.vibrate) navigator.vibrate(20);
+            localStorage.setItem('noor_dhikr', dhikrCount);
         }
 
-        function askAI(q) {
-            switchTab('chat');
-            document.getElementById('ai-input').value = q;
-            handleSend();
+        function updateDhikrUI() {
+            const countEl = document.getElementById('dhikr-counter');
+            countEl.innerText = dhikrCount;
+            const phrases = ["SubhanAllah", "Alhamdulillah", "Allahu Akbar", "La ilaha illallah"];
+            const idx = Math.floor((dhikrCount % 132) / 33);
+            document.getElementById('dhikr-title').innerText = phrases[idx];
+            
+            if(dhikrCount % 33 === 0 && navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+        }
+        updateDhikrUI();
+
+        function resetDhikr() {
+            dhikrCount = 0;
+            updateDhikrUI();
+            localStorage.setItem('noor_dhikr', 0);
         }
 
-        async function handleSend() {
+        function toggleHabit(el) {
+            el.classList.toggle('checked');
+            if(navigator.vibrate) navigator.vibrate(10);
+        }
+
+        // --- JOURNAL SYSTEM ---
+        function saveJournal() {
+            const input = document.getElementById('journal-input');
+            if(!input.value.trim()) return;
+            
+            const entry = {
+                id: Date.now(),
+                text: input.value,
+                date: new Date().toLocaleDateString()
+            };
+            
+            journals.unshift(entry);
+            localStorage.setItem('noor_journals', JSON.stringify(journals));
+            input.value = '';
+            renderJournals();
+        }
+
+        function renderJournals() {
+            const list = document.getElementById('journal-list');
+            list.innerHTML = journals.map(j => `
+                <div class="aurora-glass p-5 rounded-3xl border-white/5">
+                    <p class="text-[9px] uppercase tracking-widest text-emerald-500 font-bold mb-2">${j.date}</p>
+                    <p class="text-xs leading-relaxed text-slate-200">${j.text}</p>
+                </div>
+            `).join('');
+        }
+
+        // --- AI SYSTEM ---
+        async function sendAI() {
             const input = document.getElementById('ai-input');
-            const text = input.value.trim();
-            if(!text) return;
+            const val = input.value.trim();
+            if(!val) return;
 
-            addBubble('user', text);
+            addMsg('user', val);
             input.value = '';
 
-            const loader = document.createElement('div');
-            loader.className = 'bubble flex justify-start';
-            loader.innerHTML = `<div class="glass-panel p-4 rounded-3xl text-xs flex items-center gap-3"><span class="animate-spin">🌀</span> Noor is reflecting...</div>`;
-            document.getElementById('chat-messages').appendChild(loader);
+            const loader = addMsg('assistant', '<span class="animate-pulse">Connecting to the Divine knowledge...</span>');
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: text }] }],
-                        systemInstruction: { parts: [{ text: "You are Noor Elite, a high-end Islamic scholar AI. Use Markdown. Provide specific Quranic verses in Arabic first, then English. Be poetic but accurate." }] }
+                        contents: [{ parts: [{ text: val }] }],
+                        systemInstruction: { parts: [{ text: "You are Noor Celestial, a high-end Islamic scholar. Provide Quranic Arabic with translations. Use a compassionate, poetic, and professional tone." }] }
                     })
                 });
-
-                const data = await response.json();
-                loader.remove();
-                
-                if(data.candidates) {
-                    addBubble('assistant', data.candidates[0].content.parts[0].text);
-                } else {
-                    addBubble('assistant', "I encountered a spiritual blockage (API error). Please try again.");
-                }
+                const data = await res.json();
+                loader.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
             } catch (e) {
-                loader.remove();
-                addBubble('assistant', "Connection interrupted. Please check your signal.");
+                loader.innerText = "Connection lost. Please try again.";
             }
         }
 
-        // Enter key support
-        document.getElementById('ai-input').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') handleSend();
-        });
+        function addMsg(role, text) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-slideUp`;
+            div.innerHTML = `<div class="aurora-glass p-5 rounded-[1.8rem] ${role === 'user' ? 'bg-emerald-600/30 border-emerald-500/30 rounded-br-none' : 'rounded-bl-none'} max-w-[90%] text-sm leading-relaxed">${text}</div>`;
+            container.appendChild(div);
+            
+            const view = document.getElementById('app-view');
+            view.scrollTo({ top: view.scrollHeight, behavior: 'smooth' });
+            return div.querySelector('div');
+        }
+
+        document.getElementById('ai-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendAI(); });
     </script>
 </body>
 </html>
 
-                    
+    
