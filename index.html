@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Noor Celestial Master</title>
+    <title>Noor Celestial - Absolute Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         :root { --emerald: #10b981; --gold: #fbbf24; --cosmic: #020617; }
+        
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             background: var(--cosmic); 
@@ -15,321 +16,335 @@
             margin: 0; 
             height: 100vh; 
             overflow: hidden; 
-            touch-action: manipulation;
-            user-select: none;
+            touch-action: none;
             -webkit-user-select: none;
+            user-select: none;
         }
-        
-        #bg-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.4; }
+
+        #bg-stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
         
         .aurora-glass { 
-            background: rgba(15, 23, 42, 0.4); 
+            background: rgba(15, 23, 42, 0.7); 
             backdrop-filter: blur(25px); 
             -webkit-backdrop-filter: blur(25px); 
-            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
         }
 
-        .view-port { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 160px; z-index: 10; position: relative; }
-        .tab-section { display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        .tab-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-
-        .arabic { font-family: 'Amiri', serif; font-size: 2.2rem; color: var(--gold); text-shadow: 0 0 15px rgba(251, 191, 36, 0.2); }
+        /* Fixed Viewport Heights */
+        .view-container { 
+            height: calc(100vh - 180px); /* Leave room for header/nav */
+            overflow-y: auto; 
+            z-index: 10; 
+            position: relative;
+        }
         
-        /* THE DHIKR ENGINE FIX */
-        .dhikr-tap-zone {
-            position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .tasbih-core {
-            width: 280px; height: 280px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 80%);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            display: flex; align-items: center; justify-content: center;
-            pointer-events: auto !important; cursor: pointer;
-            transition: transform 0.05s ease;
-        }
-        .tasbih-core:active { transform: scale(0.94); background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 80%); }
+        .tab-section { display: none; min-height: 100%; width: 100%; }
+        .tab-section.active { display: flex; flex-direction: column; animation: viewIn 0.3s ease-out; }
+        
+        @keyframes viewIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-        .progress-ring { transform: rotate(-90deg); }
-        .progress-ring__circle { transition: stroke-dashoffset 0.3s; stroke: var(--emerald); }
+        /* THE ABSOLUTE DHIKR FIX */
+        #dhikr-touch-surface {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            touch-action: none;
+            position: relative;
+            z-index: 200;
+        }
+
+        .tasbih-orb {
+            width: 240px; height: 240px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.1s ease;
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.05);
+        }
+        
+        .active-tap .tasbih-orb { transform: scale(0.92); border-color: var(--emerald); background: radial-gradient(circle, rgba(16, 185, 129, 0.5) 0%, transparent 70%); }
 
         .nav-btn.active { color: var(--emerald); }
-        .nav-btn.active::after { content: ''; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background: var(--emerald); border-radius: 50%; box-shadow: 0 0 15px var(--emerald); }
+        .nav-btn.active svg { filter: drop-shadow(0 0 8px var(--emerald)); }
+
+        .arabic { font-family: 'Amiri', serif; }
 
         .ripple {
-            position: absolute; width: 100px; height: 100px; background: rgba(16, 185, 129, 0.4);
-            border-radius: 50%; pointer-events: none; transform: scale(0); animation: ripple-out 0.5s ease-out;
+            position: absolute; border-radius: 50%; background: rgba(16, 185, 129, 0.4); 
+            pointer-events: none; transform: scale(0); animation: rippleEffect 0.4s ease-out;
         }
-        @keyframes ripple-out { to { transform: scale(3); opacity: 0; } }
-
-        .qibla-compass {
-            width: 140px; height: 140px; border: 2px solid rgba(255,255,255,0.1); border-radius: 50%;
-            position: relative; display: flex; align-items: center; justify-content: center;
-        }
-        .compass-needle {
-            width: 2px; height: 60px; background: var(--emerald); position: absolute; top: 10px;
-            transform-origin: bottom center; box-shadow: 0 0 10px var(--emerald);
-        }
+        @keyframes rippleEffect { to { transform: scale(4); opacity: 0; } }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="flex items-center justify-center">
 
-    <canvas id="bg-canvas"></canvas>
+    <canvas id="bg-stars"></canvas>
 
     <div class="w-full max-w-md h-screen flex flex-col relative overflow-hidden">
         
-        <!-- Smart Header -->
-        <header class="pt-12 px-8 pb-4 flex items-center justify-between z-[1000]">
+        <!-- Header (Fixed Height) -->
+        <header class="h-24 pt-10 px-8 flex justify-between items-center z-[1000] shrink-0">
             <div>
-                <h1 class="text-xl font-black tracking-tighter">NOOR <span class="text-emerald-400">CELESTIAL</span></h1>
-                <p id="hijri-date" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Rajab 1447 • Loading...</p>
+                <h1 class="text-xl font-black tracking-tighter">NOOR <span class="text-emerald-400">CELESTE</span></h1>
+                <p id="header-date" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">1447 Hijri • Loading...</p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right">
-                    <p id="soul-rank" class="text-[8px] font-black text-emerald-500/80 uppercase">Seeker</p>
-                    <div class="w-16 h-1 bg-slate-800 rounded-full mt-1"><div id="soul-progress" class="h-full bg-emerald-500 w-0"></div></div>
-                </div>
+            <div class="w-10 h-10 aurora-glass rounded-2xl flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981] animate-pulse"></div>
             </div>
         </header>
 
-        <main class="view-port px-6" id="view-port">
+        <!-- Main Content Area -->
+        <main class="view-container hide-scrollbar px-6" id="main-content">
             
             <!-- HOME VIEW -->
-            <section id="home" class="tab-section active space-y-6 pt-4">
-                <!-- Main Card -->
+            <section id="home" class="tab-section active space-y-6">
                 <div class="aurora-glass p-8 rounded-[2.5rem] relative overflow-hidden">
-                    <p class="arabic text-center mb-6">أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</p>
-                    <p class="text-center text-slate-300 text-sm font-medium italic">"Truly, in the remembrance of Allah do hearts find rest."</p>
-                    <div class="mt-8 flex justify-center"><span class="text-[9px] font-bold text-emerald-500 uppercase px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">Ar-Ra'd 13:28</span></div>
+                    <div class="absolute -top-4 -right-4 opacity-5 text-8xl">☪</div>
+                    <p class="arabic text-right text-3xl text-gold mb-6 leading-relaxed">وَمَنْ يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ</p>
+                    <p class="text-slate-300 text-sm italic">"And whoever relies upon Allah - then He is sufficient for him."</p>
+                    <p class="text-[9px] font-black text-emerald-500 mt-4 uppercase">At-Talaq 65:3</p>
                 </div>
 
-                <!-- Daily Tools Grid -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div onclick="switchTab('athkar')" class="aurora-glass p-6 rounded-3xl flex flex-col gap-3">
-                        <span class="text-2xl">✨</span>
-                        <span class="text-[11px] font-bold uppercase tracking-widest">Morning Athkar</span>
-                    </div>
-                    <div onclick="switchTab('tools')" class="aurora-glass p-6 rounded-3xl flex flex-col gap-3">
-                        <span class="text-2xl">🧭</span>
-                        <span class="text-[11px] font-bold uppercase tracking-widest">Divine Tools</span>
-                    </div>
+                <div class="grid grid-cols-5 gap-2">
+                    <div class="aurora-glass py-3 rounded-2xl text-center"><span class="text-[8px] font-bold text-slate-500 block">FAJR</span><span class="text-[10px] font-black">05:12</span></div>
+                    <div class="aurora-glass py-3 rounded-2xl text-center border-emerald-500/30 text-emerald-400"><span class="text-[8px] font-bold block">DHUHR</span><span class="text-[10px] font-black">12:24</span></div>
+                    <div class="aurora-glass py-3 rounded-2xl text-center"><span class="text-[8px] font-bold text-slate-500 block">ASR</span><span class="text-[10px] font-black">15:38</span></div>
+                    <div class="aurora-glass py-3 rounded-2xl text-center"><span class="text-[8px] font-bold text-slate-500 block">MAGHRIB</span><span class="text-[10px] font-black">18:05</span></div>
+                    <div class="aurora-glass py-3 rounded-2xl text-center"><span class="text-[8px] font-bold text-slate-500 block">ISHA</span><span class="text-[10px] font-black">19:30</span></div>
                 </div>
 
-                <!-- 99 Names Scroll -->
                 <div class="space-y-3">
-                    <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-2">99 Names of Allah</h3>
-                    <div id="names-container" class="flex overflow-x-auto gap-4 no-scrollbar pb-2">
-                        <!-- Names injected via JS -->
+                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Quick Access</h3>
+                    <div onclick="switchTab('dhikr')" class="aurora-glass p-6 rounded-[2rem] flex items-center justify-between active:scale-95 transition-transform">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-xl">📿</div>
+                            <div><p class="text-sm font-bold">Dhikr Counter</p><p class="text-[10px] text-slate-500">Full screen tap enabled</p></div>
+                        </div>
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                     </div>
                 </div>
 
-                <!-- Sunnah Habits -->
-                <div class="aurora-glass p-6 rounded-[2rem] space-y-4">
-                    <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Sunnah Tracker</h3>
-                    <div class="space-y-2">
-                        <div onclick="toggleHabit(this)" class="flex items-center justify-between p-4 rounded-2xl bg-slate-900/40 border border-white/5">
-                            <span class="text-xs font-semibold">Siwak / Oral Care</span>
-                            <div class="w-5 h-5 rounded-full border-2 border-slate-700"></div>
-                        </div>
-                        <div onclick="toggleHabit(this)" class="flex items-center justify-between p-4 rounded-2xl bg-slate-900/40 border border-white/5">
-                            <span class="text-xs font-semibold">Smiling to others</span>
-                            <div class="w-5 h-5 rounded-full border-2 border-slate-700"></div>
-                        </div>
+                <div class="aurora-glass p-6 rounded-[2.5rem]">
+                    <h3 class="text-xs font-black mb-4">💰 Zakat Calculator</h3>
+                    <div class="flex gap-2">
+                        <input id="z-input" type="number" placeholder="Enter Savings" class="flex-1 bg-slate-900/50 p-4 rounded-2xl text-sm outline-none border border-white/5">
+                        <button onclick="calculateZ()" class="bg-emerald-500 text-slate-950 px-6 rounded-2xl font-black text-xs">Calc</button>
                     </div>
+                    <p id="z-out" class="mt-4 text-center text-emerald-400 font-bold text-sm"></p>
                 </div>
             </section>
 
             <!-- CHAT VIEW -->
-            <section id="chat" class="tab-section space-y-6 pt-4">
-                <div id="chat-messages" class="space-y-6 pb-12">
-                    <div class="flex justify-start">
-                        <div class="aurora-glass p-5 rounded-[1.8rem] rounded-bl-none max-w-[85%] text-sm leading-relaxed">
-                            Bismillah. I am Noor, your scholar guide. Ask me about Quran, Sunnah, or Fiqh.
-                        </div>
+            <section id="chat" class="tab-section">
+                <div id="messages" class="space-y-6 pb-20">
+                    <div class="aurora-glass p-5 rounded-3xl rounded-bl-none max-w-[85%] text-sm">
+                        As-salamu alaykum. I am your celestial guide. Ask me anything about your faith.
                     </div>
                 </div>
             </section>
 
-            <!-- DHIKR VIEW (THE FIXED SECTION) -->
-            <section id="dhikr" class="tab-section h-full relative">
-                <div class="dhikr-tap-zone">
-                    <div class="text-center mb-12">
-                        <p id="dhikr-label" class="text-[12px] font-black tracking-[0.5em] text-emerald-400 uppercase">SubhanAllah</p>
-                        <h2 id="dhikr-main-val" class="text-9xl font-black text-white mt-4 tracking-tighter">0</h2>
-                        <div class="flex justify-center gap-2 mt-4">
-                            <span id="target-pill" class="text-[9px] font-bold bg-white/10 px-3 py-1 rounded-full text-slate-400 uppercase">Target: ∞</span>
+            <!-- DHIKR VIEW (THE ABSOLUTE FIX) -->
+            <section id="dhikr" class="tab-section">
+                <div id="dhikr-touch-surface">
+                    <div class="text-center mb-10 pointer-events-none">
+                        <p id="d-phrase" class="text-[12px] font-black tracking-[0.6em] text-emerald-400 uppercase mb-2">SubhanAllah</p>
+                        <h2 id="d-count" class="text-[9rem] font-black text-white leading-none tracking-tighter">0</h2>
+                    </div>
+                    
+                    <div class="tasbih-orb pointer-events-none">
+                        <div class="text-center">
+                            <div class="text-emerald-500 text-4xl mb-3">📿</div>
+                            <p class="text-[10px] font-black tracking-widest text-slate-500 uppercase">Tap Screen</p>
                         </div>
                     </div>
 
-                    <div id="tasbih-btn" class="tasbih-core relative">
-                        <!-- Progress Ring -->
-                        <svg class="progress-ring absolute" width="300" height="300">
-                            <circle class="progress-ring__circle" stroke-width="4" fill="transparent" r="140" cx="150" cy="150" stroke-dasharray="879.6" stroke-dashoffset="879.6"/>
-                        </svg>
-                        
-                        <div class="w-56 h-56 rounded-full border border-emerald-500/10 flex flex-col items-center justify-center bg-slate-900/30">
-                            <span class="text-[12px] font-black tracking-widest text-emerald-500">TAP</span>
-                            <div class="w-8 h-px bg-emerald-500/20 my-3"></div>
-                            <span class="text-[8px] text-slate-500 uppercase tracking-widest">To Praise</span>
-                        </div>
-                    </div>
-
-                    <div class="mt-16 flex items-center gap-10">
-                        <button onclick="resetDhikr()" class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Reset</button>
-                        <button onclick="changeTarget()" class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Set Target</button>
-                        <button id="auto-btn" onclick="toggleAutoDhikr()" class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Auto</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TOOLS VIEW -->
-            <section id="tools" class="tab-section space-y-6 pt-4">
-                <div class="flex items-center justify-between mb-2">
-                    <h2 class="text-2xl font-black italic">Sanctuary</h2>
-                </div>
-
-                <!-- Qibla Visualizer -->
-                <div class="aurora-glass p-8 rounded-[2.5rem] flex flex-col items-center gap-6">
-                    <div class="qibla-compass">
-                        <div class="compass-needle" id="needle"></div>
-                        <span class="absolute top-2 text-[10px] font-bold text-emerald-500">KABAH</span>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-emerald-400">Directional Aid</p>
-                        <p class="text-xs text-slate-400 mt-2 px-6">Rotate your device to align with the sacred direction (Static Guide).</p>
-                    </div>
-                </div>
-
-                <!-- Zakat Calc -->
-                <div class="aurora-glass p-7 rounded-[2.5rem] space-y-5">
-                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-500">Zakat Wealth Calc</h3>
-                    <input id="zakat-in" type="number" placeholder="Net Assets" class="w-full bg-slate-950/50 p-5 rounded-2xl border border-white/5 outline-none text-sm">
-                    <div id="zakat-out" class="text-emerald-400 font-bold text-center text-sm"></div>
-                    <button onclick="calculateZakat()" class="w-full bg-emerald-500 text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest">Calculate 2.5%</button>
-                </div>
-
-                <!-- Reflections -->
-                <div class="aurora-glass p-7 rounded-[2.5rem] space-y-4">
-                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-500">Personal Reflections</h3>
-                    <textarea id="ref-text" class="w-full bg-transparent border-none outline-none text-sm min-h-[100px] resize-none" placeholder="Write a spiritual realization..."></textarea>
-                    <button onclick="saveReflection()" class="w-full bg-white text-slate-950 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest">Record</button>
-                    <div id="ref-container" class="space-y-3 pt-2"></div>
-                </div>
-            </section>
-
-            <!-- ATHKAR VIEW -->
-            <section id="athkar" class="tab-section space-y-6 pt-4">
-                <button onclick="switchTab('home')" class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg> Back
-                </button>
-                <h2 class="text-2xl font-black">Daily Athkar</h2>
-                <div class="space-y-4">
-                    <div class="aurora-glass p-6 rounded-3xl">
-                        <p class="arabic text-sm mb-4">أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ</p>
-                        <p class="text-xs text-slate-400">"We have entered a new day and with it all dominion belongs to Allah."</p>
-                    </div>
-                    <div class="aurora-glass p-6 rounded-3xl opacity-60">
-                        <p class="arabic text-sm mb-4">بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ</p>
-                        <p class="text-xs text-slate-400">"In the Name of Allah with Whose Name nothing can cause harm."</p>
+                    <div class="mt-12 flex gap-6 z-[300]">
+                        <button onclick="event.stopPropagation(); resetD();" class="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/5 px-8 py-4 rounded-full active:bg-white/10">Reset</button>
+                        <button onclick="event.stopPropagation(); toggleAuto();" id="auto-btn" class="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white/5 px-8 py-4 rounded-full active:bg-white/10">Auto: Off</button>
                     </div>
                 </div>
             </section>
 
         </main>
 
-        <!-- AI Input -->
-        <div id="ai-dock" class="hidden absolute bottom-28 left-8 right-8 z-[2000]">
-            <div class="aurora-glass rounded-[2.5rem] p-2 flex items-center border-white/10 shadow-2xl">
-                <input id="ai-input" type="text" placeholder="Inquire knowledge..." class="flex-1 bg-transparent px-6 py-4 text-sm outline-none">
-                <button onclick="askNoor()" class="w-12 h-12 bg-emerald-500 text-slate-950 rounded-[1.6rem] flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 5l7 7-7 7"></path></svg>
+        <!-- Navigation (Fixed Height) -->
+        <nav class="h-24 aurora-glass rounded-t-[3rem] flex items-center justify-around px-8 pb-4 z-[2000] shrink-0">
+            <button onclick="switchTab('home')" id="btn-home" class="nav-btn active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg></button>
+            <button onclick="switchTab('chat')" id="btn-chat" class="nav-btn text-slate-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg></button>
+            <button onclick="switchTab('dhikr')" id="btn-dhikr" class="nav-btn text-slate-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+        </nav>
+
+        <!-- Chat Input Bar -->
+        <div id="chat-input-container" class="hidden absolute bottom-28 left-6 right-6 z-[2500]">
+            <div class="aurora-glass rounded-3xl p-2 flex items-center shadow-2xl">
+                <input id="chat-in" type="text" placeholder="Ask Noor..." class="flex-1 bg-transparent px-5 py-4 text-sm outline-none">
+                <button onclick="askNoor()" class="w-12 h-12 bg-emerald-500 text-slate-950 rounded-2xl flex items-center justify-center active:scale-90 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M13 5l7 7-7 7M5 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                 </button>
             </div>
         </div>
-
-        <!-- Navigation -->
-        <nav class="shrink-0 h-24 aurora-glass rounded-t-[3.5rem] flex items-center justify-around px-8 pb-4 z-[2100]">
-            <button onclick="switchTab('home')" class="nav-btn transition-all relative active" id="btn-home">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-            </button>
-            <button onclick="switchTab('chat')" class="nav-btn transition-all relative text-slate-600" id="btn-chat">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-            </button>
-            <button onclick="switchTab('dhikr')" class="nav-btn transition-all relative text-slate-600" id="btn-dhikr">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </button>
-        </nav>
     </div>
 
     <script>
         const apiKey = "";
-        let dhikrCount = parseInt(localStorage.getItem('noor_v3_dhikr')) || 0;
-        let dhikrTarget = parseInt(localStorage.getItem('noor_v3_target')) || 0;
-        let habitsDone = 0;
-        let autoInt = null;
+        let count = parseInt(localStorage.getItem('noor_v5_count')) || 0;
+        let autoInterval = null;
 
-        // Background
-        const canvas = document.getElementById('bg-canvas');
+        // --- DHIKR ENGINE ---
+        const surface = document.getElementById('dhikr-touch-surface');
+        
+        // Multi-touch Support
+        const handleTap = (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            e.preventDefault();
+            
+            count++;
+            surface.classList.add('active-tap');
+            setTimeout(() => surface.classList.remove('active-tap'), 100);
+            
+            // Haptics
+            if(navigator.vibrate) navigator.vibrate(25);
+            
+            // Ripple effect
+            const touch = e.touches ? e.touches[0] : e;
+            const rip = document.createElement('div');
+            rip.className = 'ripple';
+            rip.style.left = `${touch.clientX - 25}px`;
+            rip.style.top = `${touch.clientY - 25}px`;
+            rip.style.width = rip.style.height = '50px';
+            document.body.appendChild(rip);
+            setTimeout(() => rip.remove(), 400);
+
+            updateDhikrUI();
+        };
+
+        surface.addEventListener('touchstart', handleTap, { passive: false });
+        surface.addEventListener('mousedown', handleTap);
+
+        function updateDhikrUI() {
+            document.getElementById('d-count').innerText = count;
+            localStorage.setItem('noor_v5_count', count);
+            const phrases = ["SubhanAllah", "Alhamdulillah", "Allahu Akbar", "La ilaha illallah"];
+            const idx = Math.floor((count % 132) / 33);
+            document.getElementById('d-phrase').innerText = phrases[idx];
+
+            if (count > 0 && count % 33 === 0 && navigator.vibrate) {
+                navigator.vibrate([80, 40, 80]);
+            }
+        }
+
+        function resetD() { count = 0; updateDhikrUI(); }
+
+        function toggleAuto() {
+            const btn = document.getElementById('auto-btn');
+            if(autoInterval) {
+                clearInterval(autoInterval); autoInterval = null;
+                btn.innerText = "Auto: Off"; btn.style.color = "";
+            } else {
+                autoInterval = setInterval(() => { count++; updateDhikrUI(); }, 1000);
+                btn.innerText = "Auto: On"; btn.style.color = "#10b981";
+            }
+        }
+
+        // --- NAV SYSTEM ---
+        function switchTab(id) {
+            document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.add('text-slate-600');
+            });
+
+            const target = document.getElementById(id);
+            target.classList.add('active');
+            
+            const btn = document.getElementById('btn-' + id);
+            btn.classList.add('active');
+            btn.classList.remove('text-slate-600');
+
+            document.getElementById('chat-input-container').classList.toggle('hidden', id !== 'chat');
+            document.getElementById('main-content').scrollTop = 0;
+            
+            // Reset state if leaving/entering dhikr
+            if (id !== 'dhikr' && autoInterval) toggleAuto();
+        }
+
+        // --- BACKGROUND ---
+        const canvas = document.getElementById('bg-stars');
         const ctx = canvas.getContext('2d');
         let stars = [];
         function initStars() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            for(let i=0; i<100; i++) stars.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5, sp: Math.random()*0.1});
+            stars = Array.from({length: 100}, () => ({
+                x: Math.random()*canvas.width, 
+                y: Math.random()*canvas.height, 
+                r: Math.random()*1.2, 
+                o: Math.random()
+            }));
         }
         function drawStars() {
-            ctx.clearRect(0,0,canvas.width, canvas.height); ctx.fillStyle="#fff";
-            stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill(); s.y -= s.sp; if(s.y < 0) s.y = canvas.height; });
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            stars.forEach(s => {
+                ctx.fillStyle = `rgba(255,255,255,${s.o})`;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+                s.o += 0.005 * (Math.random() > 0.5 ? 1 : -1);
+                if(s.o < 0.1) s.o = 0.1; if(s.o > 0.8) s.o = 0.8;
+            });
             requestAnimationFrame(drawStars);
         }
+        window.addEventListener('resize', initStars);
         initStars(); drawStars();
 
-        // Names Data
-        const names = [["Ar-Rahman","The All-Merciful"], ["Ar-Rahim","The Especially Merciful"], ["Al-Malik","The King"], ["Al-Quddus","The Pure One"], ["As-Salam","The Source of Peace"]];
-        document.getElementById('names-container').innerHTML = names.map(n => `
-            <div class="aurora-glass rounded-3xl p-5 min-w-[140px] flex flex-col items-center justify-center text-center">
-                <span class="text-xl font-black text-gold">${n[0]}</span>
-                <span class="text-[9px] text-slate-500 mt-2 uppercase tracking-widest font-bold">${n[1]}</span>
-            </div>
-        `).join('');
-
-        // DHIKR ENGINE CORE FIX
-        const dhikrBtn = document.getElementById('tasbih-btn');
-        dhikrBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            incrementDhikr(e);
-        });
-
-        function incrementDhikr(e) {
-            dhikrCount++;
-            if(navigator.vibrate) navigator.vibrate(40);
-            
-            // Ripple Visual
-            if(e && e.clientX) {
-                const r = document.createElement('div');
-                r.className = 'ripple';
-                r.style.left = `${e.clientX - 50}px`;
-                r.style.top = `${e.clientY - 50}px`;
-                document.body.appendChild(r);
-                setTimeout(() => r.remove(), 500);
-            }
-            
-            updateDhikrUI();
+        // --- AI & TOOLS ---
+        function calculateZ() {
+            const v = document.getElementById('z-input').value;
+            if(!v) return;
+            document.getElementById('z-out').innerText = `Due: ${(v * 0.025).toLocaleString()} ₮`;
         }
 
-        function updateDhikrUI() {
-            document.getElementById('dhikr-main-val').innerText = dhikrCount;
-            localStorage.setItem('noor_v3_dhikr', dhikrCount);
-            
-            const p = ["SubhanAllah", "Alhamdulillah", "Allahu Akbar", "La ilaha illallah"];
-            const idx = Math.floor((dhikrCount % 132) / 33);
-            document.getElementById('dhikr-label').innerText = p[idx];
+        async function askNoor() {
+            const input = document.getElementById('chat-in');
+            const val = input.value.trim();
+            if(!val) return;
+            addMsg('user', val); input.value = '';
+            const loader = addMsg('assistant', '<span class="animate-pulse">Consulting the Light...</span>');
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: val }] }],
+                        systemInstruction: { parts: [{ text: "You are Noor Celeste, a wise and compassionate Islamic Scholar. Provide verses in Arabic then English. Elegant and concise." }] }
+                    })
+                });
+                const data = await res.json();
+                loader.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+            } catch (e) { loader.innerText = "Connection lost. Try again."; }
+        }
 
-            // Progress Ring
-            if(dhikrTarget > 0) {
-                const circle = document.querySelector('.progress-ring__circle');
-                const radius = circle.r.baseVal.value;
-                const circumference = radius * 2 * Math.PI;
-                const offset = circumference - (Math.min(dhikrCount % dhikrTarget, dhikrTarget) / dhikrTarget) * circumference;
-                circle.style.strokeDashoffset = offset;
-                
-                if(dhikrCount > 0 && dhikrCount % dhikrTarget === 
+        function addMsg(role, text) {
+            const box = document.getElementById('messages');
+            const d = document.createElement('div');
+            d.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+            d.innerHTML = `<div class="aurora-glass p-5 rounded-3xl ${role === 'user' ? 'rounded-br-none border-emerald-500/20' : 'rounded-bl-none'} max-w-[85%] text-sm">${text}</div>`;
+            box.appendChild(d);
+            document.getElementById('main-content').scrollTo({top: 9999, behavior: 'smooth'});
+            return d.querySelector('div');
+        }
+
+        // --- INIT ---
+        const hijri = new Intl.DateTimeFormat('en-u-ca-islamic-uma', {day:'numeric', month:'long', year:'numeric'}).format(new Date());
+        document.getElementById('header-date').innerText = hijri;
+        updateDhikrUI();
+    </script>
+</body>
+</html>
+
+                        
