@@ -123,7 +123,7 @@
                     </button>
                 </div>
 
-                <!-- Restore Old Verse Card -->
+                <!-- Verse Card -->
                 <div class="aurora-glass p-8 rounded-[2.5rem] relative overflow-hidden">
                     <div class="absolute -top-4 -right-4 opacity-5 text-8xl">☪</div>
                     <p class="arabic text-right text-3xl text-gold mb-6 leading-relaxed">وَمَنْ يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ</p>
@@ -143,7 +143,7 @@
                     </div>
                 </div>
 
-                <!-- Restore Old Zakat Tool -->
+                <!-- Zakat Tool -->
                 <div class="aurora-glass p-6 rounded-[2.5rem]">
                     <h3 class="text-xs font-black mb-4 flex items-center gap-2">💰 Zakat Calculator</h3>
                     <div class="flex gap-2">
@@ -175,7 +175,7 @@
 
         </div>
 
-        <!-- DHIKR OVERLAY (GUARANTEED VISIBILITY) -->
+        <!-- DHIKR OVERLAY -->
         <div id="dhikr-panel" onclick="dhikrTap(event)">
             <div class="text-center mb-10 pointer-events-none">
                 <p id="d-phrase" class="text-xs font-black tracking-[0.5em] text-emerald-400 uppercase mb-4">SubhanAllah</p>
@@ -215,7 +215,8 @@
     </div>
 
     <script>
-        const apiKey = "";
+        const apiKey = ""; // Platforms injects key at runtime
+
         let count = parseInt(localStorage.getItem('noor_v_final_count')) || 0;
         let autoInterval = null;
 
@@ -302,25 +303,51 @@
             askNoor();
         }
 
+        // --- AI API CALL ---
         async function askNoor() {
             const input = document.getElementById('chat-in');
             const val = input.value.trim();
             if(!val) return;
-            addMsg('user', val); input.value = '';
+            
+            addMsg('user', val); 
+            input.value = '';
             const loader = addMsg('assistant', '<span class="animate-pulse">Consulting the Light...</span>');
             
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+            let retries = 0;
+            const maxRetries = 5;
+            const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+            const callApi = async () => {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: val }] }],
-                        systemInstruction: { parts: [{ text: "You are Noor Celeste. Start with Bismillah. You are a wise Islamic Scholar. Provide verses in Arabic then English. Be concise." }] }
+                        systemInstruction: { 
+                            parts: [{ text: "You are Noor Celeste. Start with Bismillah. You are a wise and compassionate Islamic Scholar. Use Arabic verses followed by English translations. Keep responses elegant and concise." }] 
+                        }
                     })
                 });
-                const data = await res.json();
-                loader.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
-            } catch (e) { loader.innerText = "Connection lost. Please try again."; }
+                if (!response.ok) throw new Error('API Error');
+                return await response.json();
+            };
+
+            while (retries < maxRetries) {
+                try {
+                    const data = await callApi();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    loader.innerHTML = text.replace(/\n/g, '<br>');
+                    return;
+                } catch (e) {
+                    retries++;
+                    if (retries === maxRetries) {
+                        loader.innerText = "The connection is weak. Please check your network and try again.";
+                    } else {
+                        await delay(Math.pow(2, retries) * 1000);
+                    }
+                }
+            }
         }
 
         function addMsg(role, text) {
@@ -339,7 +366,7 @@
         function drawStars() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             ctx.clearRect(0,0,canvas.width, canvas.height);
-            for(let i=0; i<100; i++) {
+            for(let i=0; i<120; i++) {
                 ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.8})`;
                 ctx.beginPath(); ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*1, 0, Math.PI*2); ctx.fill();
             }
@@ -347,10 +374,11 @@
         window.addEventListener('resize', drawStars);
         drawStars();
 
-        document.getElementById('header-date').innerText = new Intl.DateTimeFormat('en-u-ca-islamic-uma', {day:'numeric', month:'long', year:'numeric'}).format(new Date());
+        const hijri = new Intl.DateTimeFormat('en-u-ca-islamic-uma', {day:'numeric', month:'long', year:'numeric'}).format(new Date());
+        document.getElementById('header-date').innerText = hijri;
         updateDhikrUI();
     </script>
 </body>
 </html>
 
-                        
+                                                                                  
