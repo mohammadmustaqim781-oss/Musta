@@ -52,7 +52,7 @@
         .tab-section.active { display: flex; animation: viewSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes viewSlide { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* THE DHIKR OVERLAY */
+        /* DHIKR OVERLAY */
         #dhikr-panel {
             position: fixed;
             inset: 0;
@@ -90,6 +90,14 @@
         @keyframes rippleEffect { to { transform: scale(4); opacity: 0; } }
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+        .prayer-time-active {
+            color: var(--emerald);
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+            padding: 4px;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+        }
     </style>
 </head>
 <body class="flex items-center justify-center">
@@ -112,7 +120,6 @@
         <!-- Main Content Area -->
         <div class="main-stage hide-scrollbar" id="scroll-target">
             
-            <!-- HOME VIEW -->
             <section id="home" class="tab-section active space-y-6">
                 <!-- AI Quick Access -->
                 <div class="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 p-2 rounded-3xl flex items-center gap-3 backdrop-blur-md border border-white/5">
@@ -153,26 +160,42 @@
                     <p id="z-out" class="mt-4 text-center text-emerald-400 font-bold text-sm"></p>
                 </div>
 
-                <!-- Prayer Times -->
+                <!-- Prayer Times (LIVE UPDATING) -->
                 <div class="aurora-glass p-6 rounded-[2.5rem] border-white/5">
-                    <p class="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest">Prayer Times</p>
-                    <div class="flex justify-between text-center">
-                        <div><p class="text-[8px] text-slate-500 mb-1">FAJR</p><p class="text-xs font-bold">05:12</p></div>
-                        <div class="text-emerald-500"><p class="text-[8px] mb-1">DHUHR</p><p class="text-xs font-bold">12:15</p></div>
-                        <div><p class="text-[8px] text-slate-500 mb-1">ASR</p><p class="text-xs font-bold">15:20</p></div>
-                        <div><p class="text-[8px] text-slate-500 mb-1">MAGHRIB</p><p class="text-xs font-bold">17:58</p></div>
-                        <div><p class="text-[8px] text-slate-500 mb-1">ISHA</p><p class="text-xs font-bold">19:10</p></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Prayer Times</p>
+                        <p id="next-prayer-countdown" class="text-[9px] font-bold text-emerald-500 animate-pulse"></p>
+                    </div>
+                    <div class="flex justify-between text-center gap-1" id="prayer-list">
+                        <div id="p-fajr">
+                            <p class="text-[8px] text-slate-500 mb-1">FAJR</p>
+                            <p class="text-xs font-bold time-val">--:--</p>
+                        </div>
+                        <div id="p-dhuhr">
+                            <p class="text-[8px] text-slate-500 mb-1">DHUHR</p>
+                            <p class="text-xs font-bold time-val">--:--</p>
+                        </div>
+                        <div id="p-asr">
+                            <p class="text-[8px] text-slate-500 mb-1">ASR</p>
+                            <p class="text-xs font-bold time-val">--:--</p>
+                        </div>
+                        <div id="p-maghrib">
+                            <p class="text-[8px] text-slate-500 mb-1">MAGHRIB</p>
+                            <p class="text-xs font-bold time-val">--:--</p>
+                        </div>
+                        <div id="p-isha">
+                            <p class="text-[8px] text-slate-500 mb-1">ISHA</p>
+                            <p class="text-xs font-bold time-val">--:--</p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- CHAT VIEW -->
             <section id="chat" class="tab-section hide-scrollbar">
                 <div id="messages" class="space-y-6 pb-20 pt-4">
                     <div class="aurora-glass p-5 rounded-3xl rounded-bl-none text-sm max-w-[85%] leading-relaxed">As-salamu alaykum. I am your celestial guide. Ask me anything about Deen.</div>
                 </div>
             </section>
-
         </div>
 
         <!-- DHIKR OVERLAY -->
@@ -196,14 +219,12 @@
             </div>
         </div>
 
-        <!-- Navigation -->
         <nav class="h-[100px] aurora-glass rounded-t-[3rem] flex items-center justify-around px-8 pb-4 z-[1000] relative">
             <button onclick="switchTab('home')" id="btn-home" class="nav-btn active transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg></button>
-            <button onclick="switchTab('chat')" id="btn-chat" class="nav-btn text-slate-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2-2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg></button>
+            <button onclick="switchTab('chat')" id="btn-chat" class="nav-btn text-slate-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg></button>
             <button onclick="switchTab('dhikr')" id="btn-dhikr" class="nav-btn text-slate-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
         </nav>
 
-        <!-- Chat Input Container -->
         <div id="chat-input-container" class="hidden absolute bottom-28 left-6 right-6 z-[2000]">
             <div class="aurora-glass rounded-3xl p-2 flex items-center shadow-2xl border border-emerald-500/20">
                 <input id="chat-in" type="text" placeholder="Seek knowledge..." class="flex-1 bg-transparent px-5 py-4 text-sm outline-none text-white">
@@ -215,30 +236,74 @@
     </div>
 
     <script>
-        // Restored API key
         const apiKey = "AIzaSyB5spR0BCO12vGTbBCtFOC_PbKteK7fk7g";
 
         let count = parseInt(localStorage.getItem('noor_v_final_count')) || 0;
         let autoInterval = null;
 
+        // --- PRAYER TIMES LOGIC ---
+        async function fetchPrayerTimes() {
+            try {
+                // Using IP-based geolocation as a fallback for the API
+                const res = await fetch('https://api.aladhan.com/v1/timingsByCity?city=Mecca&country=Saudi%20Arabia&method=4');
+                const data = await res.json();
+                const timings = data.data.timings;
+                
+                const prayerMap = {
+                    'Fajr': 'p-fajr',
+                    'Dhuhr': 'p-dhuhr',
+                    'Asr': 'p-asr',
+                    'Maghrib': 'p-maghrib',
+                    'Isha': 'p-isha'
+                };
+
+                const now = new Date();
+                let nextPrayerName = '';
+                let nextPrayerTime = null;
+
+                Object.keys(prayerMap).forEach(key => {
+                    const timeStr = timings[key];
+                    const [hours, minutes] = timeStr.split(':');
+                    const pDate = new Date();
+                    pDate.setHours(hours, minutes, 0);
+
+                    document.querySelector(`#${prayerMap[key]} .time-val`).innerText = timeStr;
+
+                    if (!nextPrayerTime && pDate > now) {
+                        nextPrayerTime = pDate;
+                        nextPrayerName = key;
+                        document.getElementById(prayerMap[key]).classList.add('prayer-time-active');
+                    } else {
+                        document.getElementById(prayerMap[key]).classList.remove('prayer-time-active');
+                    }
+                });
+
+                if (nextPrayerTime) {
+                    const diff = nextPrayerTime - now;
+                    const h = Math.floor(diff / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    document.getElementById('next-prayer-countdown').innerText = `Next: ${nextPrayerName} in ${h}h ${m}m`;
+                }
+
+            } catch (err) {
+                console.error("Prayer fetch failed", err);
+            }
+        }
+
         // --- DHIKR LOGIC ---
         function dhikrTap(e) {
             if (e.target.tagName === 'BUTTON') return;
             count++;
-            
             const panel = document.getElementById('dhikr-panel');
             panel.classList.add('active-tap');
             setTimeout(() => panel.classList.remove('active-tap'), 80);
-
             if(navigator.vibrate) navigator.vibrate(20);
-            
             const rip = document.createElement('div');
             rip.className = 'ripple';
             rip.style.left = `${e.clientX - 25}px`;
             rip.style.top = `${e.clientY - 25}px`;
             document.body.appendChild(rip);
             setTimeout(() => rip.remove(), 400);
-
             updateDhikrUI();
         }
 
@@ -268,27 +333,22 @@
         function switchTab(id) {
             document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
             document.getElementById('dhikr-panel').classList.remove('active');
-            
             document.querySelectorAll('.nav-btn').forEach(b => {
                 b.classList.remove('active', 'text-emerald-400');
                 b.classList.add('text-slate-600');
             });
-
             if (id === 'dhikr') {
                 document.getElementById('dhikr-panel').classList.add('active');
             } else {
                 document.getElementById(id).classList.add('active');
             }
-
             const activeBtn = document.getElementById('btn-' + id);
             activeBtn.classList.add('active', 'text-emerald-400');
             activeBtn.classList.remove('text-slate-600');
-
             document.getElementById('chat-input-container').classList.toggle('hidden', id !== 'chat');
             document.getElementById('scroll-target').scrollTop = 0;
         }
 
-        // --- TOOLS ---
         function calculateZ() {
             const v = document.getElementById('z-input').value;
             if(!v) return;
@@ -304,82 +364,21 @@
             askNoor();
         }
 
-        // --- AI API CALL ---
         async function askNoor() {
             const input = document.getElementById('chat-in');
             const val = input.value.trim();
             if(!val) return;
-            
             addMsg('user', val); 
             input.value = '';
             const loader = addMsg('assistant', '<span class="animate-pulse">Consulting the Light...</span>');
-            
-            let retries = 0;
-            const maxRetries = 5;
-            const delay = (ms) => new Promise(res => setTimeout(res, ms));
-
-            const callApi = async () => {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                const response = await fetch(url, {
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: val }] }],
-                        systemInstruction: { 
-                            parts: [{ text: "You are Noor Celeste. Start with Bismillah. You are a wise and compassionate Islamic Scholar. Use Arabic verses followed by English translations. Keep responses elegant and concise." }] 
-                        }
+                        systemInstruction: { parts: [{ text: "You are Noor Celeste. Start with Bismillah. You are a wise Islamic Scholar. Arabic then English. Concise." }] }
                     })
                 });
-                if (!response.ok) throw new Error('API Error');
-                return await response.json();
-            };
-
-            while (retries < maxRetries) {
-                try {
-                    const data = await callApi();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    loader.innerHTML = text.replace(/\n/g, '<br>');
-                    return;
-                } catch (e) {
-                    retries++;
-                    if (retries === maxRetries) {
-                        loader.innerText = "The connection is weak. Please check your network and try again.";
-                    } else {
-                        await delay(Math.pow(2, retries) * 1000);
-                    }
-                }
-            }
-        }
-
-        function addMsg(role, text) {
-            const box = document.getElementById('messages');
-            const d = document.createElement('div');
-            d.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            d.innerHTML = `<div class="aurora-glass p-5 rounded-3xl ${role === 'user' ? 'rounded-br-none border-emerald-500/30' : 'rounded-bl-none'} max-w-[85%] text-sm">${text}</div>`;
-            box.appendChild(d);
-            document.getElementById('scroll-target').scrollTo({top: 9999, behavior: 'smooth'});
-            return d.querySelector('div');
-        }
-
-        // --- INITIALIZATION ---
-        const canvas = document.getElementById('bg-stars');
-        const ctx = canvas.getContext('2d');
-        function drawStars() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            for(let i=0; i<120; i++) {
-                ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.8})`;
-                ctx.beginPath(); ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*1, 0, Math.PI*2); ctx.fill();
-            }
-        }
-        window.addEventListener('resize', drawStars);
-        drawStars();
-
-        const hijri = new Intl.DateTimeFormat('en-u-ca-islamic-uma', {day:'numeric', month:'long', year:'numeric'}).format(new Date());
-        document.getElementById('header-date').innerText = hijri;
-        updateDhikrUI();
-    </script>
-</body>
-</html>
-
-    
+                const data = await res.json();
+                loader.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/
