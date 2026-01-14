@@ -3,246 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wellness Hub AI</title>
+    <title>Wellness Hub Ultimate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         
+        :root {
+            --primary: #6366f1;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            background: #f8fafc;
+            transition: all 0.8s ease;
         }
+
+        /* Liminal Themes */
+        .theme-office { background: #cbd5e1; color: #1e293b; }
+        .theme-underwater { background: #0c4a6e; color: #bae6fd; }
+        .theme-space { background: #020617; color: #94a3b8; }
+        .theme-eerie { background: #000000; color: #ef4444; }
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
         }
 
         .breathe-animation {
             transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .expanding { transform: scale(1.7); }
 
-        .expanding { transform: scale(1.6); }
-
-        .tab-active {
-            border-bottom: 2px solid #6366f1;
-            color: #6366f1;
+        .progress-ring {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
         }
 
-        .chat-container::-webkit-scrollbar {
-            width: 4px;
-        }
-        .chat-container::-webkit-scrollbar-thumb {
-            background: #e2e8f0;
-            border-radius: 10px;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade { animation: fadeIn 0.3s ease forwards; }
+        .animate-in { animation: slideUp 0.4s ease forwards; }
     </style>
 </head>
-<body class="min-h-screen text-slate-900">
+<body class="min-h-screen pb-12">
 
-    <!-- Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
-        <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-indigo-600 flex items-center gap-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                WellnessHub
-            </h1>
-            <div class="flex space-x-6 text-sm font-semibold text-slate-500">
-                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-active py-1">Dashboard</button>
-                <button onclick="switchTab('coach')" id="tab-coach" class="py-1">AI Coach</button>
+    <!-- Header -->
+    <header class="max-w-6xl mx-auto px-6 pt-10 pb-6 flex flex-col md:flex-row justify-between items-end gap-4">
+        <div>
+            <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">Personal Sanctuary ✨</h1>
+            <p id="quote" class="text-slate-500 italic mt-1">"The best time to relax is when you don't have time for it."</p>
+        </div>
+        <div class="flex gap-3">
+            <div class="glass-panel px-4 py-2 rounded-2xl text-sm font-bold shadow-sm">
+                Focus: <span id="stat-sessions" class="text-indigo-600">0</span>
+            </div>
+            <div class="glass-panel px-4 py-2 rounded-2xl text-sm font-bold shadow-sm">
+                Water: <span id="stat-water" class="text-blue-500">0</span>/8
             </div>
         </div>
-    </nav>
+    </header>
 
-    <main class="max-w-5xl mx-auto px-6 pt-8 pb-20">
+    <main class="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Dashboard Tab -->
-        <section id="section-dashboard" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-8">
-                <!-- Focus Mode -->
-                <div class="glass-panel rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8">
-                    <div class="relative w-40 h-40">
-                        <svg class="w-full h-full -rotate-90">
-                            <circle class="text-slate-100 stroke-current" stroke-width="6" fill="transparent" r="70" cx="80" cy="80"/>
-                            <circle id="timer-progress" class="text-indigo-600 stroke-current transition-all duration-1000" stroke-width="6" stroke-linecap="round" fill="transparent" r="70" cx="80" cy="80" style="stroke-dasharray: 440; stroke-dashoffset: 440;"/>
-                        </svg>
-                        <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-3xl font-bold">25:00</div>
-                    </div>
-                    <div class="flex-1 text-center md:text-left">
-                        <h2 class="text-2xl font-bold mb-2">Deep Focus</h2>
-                        <p class="text-slate-500 text-sm mb-4">Concentrate on your most important task.</p>
-                        <div class="flex gap-3 justify-center md:justify-start">
-                            <button onclick="toggleTimer()" id="timer-btn" class="bg-indigo-600 text-white px-8 py-2 rounded-xl font-medium shadow-lg shadow-indigo-100">Start</button>
-                            <button onclick="resetTimer()" class="bg-white border border-slate-200 px-8 py-2 rounded-xl font-medium">Reset</button>
-                        </div>
+        <!-- Left Column (8 units): Focus & Sound -->
+        <div class="lg:col-span-8 space-y-6">
+            
+            <!-- Focus Timer -->
+            <section class="glass-panel rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center gap-10">
+                <div class="relative w-44 h-44">
+                    <svg class="w-full h-full">
+                        <circle class="text-slate-100 stroke-current" stroke-width="8" fill="transparent" r="80" cx="88" cy="88"/>
+                        <circle id="timer-ring" class="text-indigo-600 stroke-current progress-ring" stroke-width="8" stroke-linecap="round" fill="transparent" r="80" cx="88" cy="88" style="stroke-dasharray: 502.6; stroke-dashoffset: 502.6;"/>
+                    </svg>
+                    <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-4xl font-black">25:00</div>
+                </div>
+                <div class="flex-1 text-center md:text-left">
+                    <h2 class="text-2xl font-bold mb-2">Deep Work</h2>
+                    <p class="text-slate-500 mb-6 text-sm">Quiet the world, focus the mind.</p>
+                    <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                        <button onclick="toggleTimer()" id="timer-btn" class="bg-indigo-600 text-white px-10 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200">START</button>
+                        <button onclick="resetTimer()" class="bg-white border border-slate-200 px-10 py-3 rounded-2xl font-bold">RESET</button>
                     </div>
                 </div>
+            </section>
 
-                <!-- Breathe -->
-                <div class="glass-panel rounded-3xl p-8 text-center">
-                    <h2 class="text-xl font-bold mb-8">Mindful Breathing</h2>
-                    <div id="breathe-circle" class="breathe-animation w-28 h-28 bg-indigo-50 rounded-full mx-auto flex items-center justify-center border-2 border-indigo-100 mb-8 shadow-inner">
-                        <span id="breathe-status" class="text-indigo-700 text-[10px] font-bold uppercase tracking-widest">Ready</span>
-                    </div>
-                    <button onclick="toggleBreathing()" id="breathe-btn" class="text-indigo-600 font-bold hover:text-indigo-800 transition">Begin Meditation</button>
-                </div>
-            </div>
-
-            <!-- Side Stats -->
-            <div class="space-y-6">
-                <div class="glass-panel rounded-3xl p-6">
-                    <h3 class="font-bold mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zM7 10a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1z"/></svg>
-                        Daily Hydration
-                    </h3>
-                    <div class="flex justify-between items-center">
-                        <span class="text-2xl font-bold text-blue-600"><span id="water-count">0</span> / 8</span>
-                        <button onclick="addWater()" class="bg-blue-600 text-white w-10 h-10 rounded-xl font-bold shadow-md">+</button>
-                    </div>
-                </div>
-                
-                <div class="glass-panel rounded-3xl p-6">
-                    <h3 class="font-bold mb-4">Current Vibe</h3>
-                    <div class="grid grid-cols-4 gap-2">
-                        <button onclick="logMood('Grateful')" class="p-3 bg-white rounded-2xl hover:bg-indigo-50 transition text-xl">✨</button>
-                        <button onclick="logMood('Focused')" class="p-3 bg-white rounded-2xl hover:bg-indigo-50 transition text-xl">🎯</button>
-                        <button onclick="logMood('Tired')" class="p-3 bg-white rounded-2xl hover:bg-indigo-50 transition text-xl">☕</button>
-                        <button onclick="logMood('Zen')" class="p-3 bg-white rounded-2xl hover:bg-indigo-50 transition text-xl">🧘</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- AI Coach Tab -->
-        <section id="section-coach" class="hidden max-w-3xl mx-auto">
-            <div class="glass-panel rounded-[2rem] flex flex-col h-[650px] overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex items-center gap-4">
-                    <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                    </div>
-                    <div>
-                        <h2 class="font-bold text-slate-800">AI Wellness Coach</h2>
-                        <p class="text-xs text-green-500 font-semibold flex items-center gap-1">
-                            <span class="w-2 h-2 bg-green-500 rounded-full"></span> Online & Ready
-                        </p>
-                    </div>
-                </div>
-                
-                <div id="chat-box" class="chat-container flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/30">
-                    <div class="bg-indigo-600 text-white p-4 rounded-2xl rounded-tl-none text-sm max-w-[85%] shadow-sm">
-                        Hello! I'm your Wellness Coach. Need help staying focused, managing stress, or building better habits? Ask me anything.
-                    </div>
-                </div>
-
-                <div class="p-6 bg-white border-t border-slate-100 flex gap-3">
-                    <input type="text" id="chat-input" placeholder="Ask about wellness..." class="flex-1 bg-slate-100 border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none">
-                    <button onclick="sendMessage()" id="send-btn" class="bg-indigo-600 text-white p-3 rounded-2xl shadow-lg hover:shadow-indigo-200 transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            <!-- Weird Soundscapes -->
+            <section class="glass-panel rounded-[2.5rem] p-8">
+                <h3 class="font-bold text-lg mb-6 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+                    Liminal Soundscapes
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <button onclick="toggleSound('office')" id="btn-office" class="p-4 bg-white/50 rounded-3xl hover:bg-white transition text-left group">
+                        <span class="block text-2xl mb-2">🏢</span>
+                        <span class="block font-bold text-xs uppercase tracking-tighter">Backrooms</span>
+                    </button>
+                    <button onclick="toggleSound('underwater')" id="btn-underwater" class="p-4 bg-white/50 rounded-3xl hover:bg-white transition text-left group">
+                        <span class="block text-2xl mb-2">🌊</span>
+                        <span class="block font-bold text-xs uppercase tracking-tighter">Submerged</span>
+                    </button>
+                    <button onclick="toggleSound('space')" id="btn-space" class="p-4 bg-white/50 rounded-3xl hover:bg-white transition text-left group">
+                        <span class="block text-2xl mb-2">🌑</span>
+                        <span class="block font-bold text-xs uppercase tracking-tighter">The Void</span>
+                    </button>
+                    <button onclick="toggleSound('eerie')" id="btn-eerie" class="p-4 bg-white/50 rounded-3xl hover:bg-white transition text-left group">
+                        <span class="block text-2xl mb-2 text-red-500">👺</span>
+                        <span class="block font-bold text-xs uppercase tracking-tighter">Dissonance</span>
                     </button>
                 </div>
-            </div>
-        </section>
+            </section>
 
+            <!-- Breathing -->
+            <section class="glass-panel rounded-[2.5rem] p-8 text-center overflow-hidden relative">
+                <h3 class="font-bold mb-8">Guided Breath</h3>
+                <div id="breathe-circle" class="breathe-animation w-32 h-32 bg-indigo-100/50 rounded-full mx-auto flex items-center justify-center border-4 border-white mb-10 shadow-inner">
+                    <div class="w-24 h-24 bg-indigo-500/10 rounded-full animate-pulse flex items-center justify-center">
+                        <span id="breathe-status" class="text-indigo-600 text-[10px] font-black uppercase tracking-widest">Idle</span>
+                    </div>
+                </div>
+                <button onclick="toggleBreathing()" id="breathe-btn" class="text-indigo-600 font-bold uppercase tracking-widest text-xs">Begin Session</button>
+            </section>
+        </div>
+
+        <!-- Right Column (4 units): Tracker & Goals -->
+        <div class="lg:col-span-4 space-y-6">
+            
+            <!-- Mood Log -->
+            <section class="glass-panel rounded-[2.5rem] p-6">
+                <h3 class="font-bold mb-4">Mood Check-in</h3>
+                <div class="grid grid-cols-5 gap-2">
+                    <button onclick="logMood('🤩')" class="hover:bg-white p-2 rounded-xl text-xl transition">🤩</button>
+                    <button onclick="logMood('🙂')" class="hover:bg-white p-2 rounded-xl text-xl transition">🙂</button>
+                    <button onclick="logMood('😐')" class="hover:bg-white p-2 rounded-xl text-xl transition">😐</button>
+                    <button onclick="logMood('😔')" class="hover:bg-white p-2 rounded-xl text-xl transition">😔</button>
+                    <button onclick="logMood('😫')" class="hover:bg-white p-2 rounded-xl text-xl transition">😫</button>
+                </div>
+            </section>
+
+            <!-- Hydration -->
+            <section class="glass-panel rounded-[2.5rem] p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold">Hydration</h3>
+                    <button onclick="addWater()" class="bg-blue-600 text-white w-8 h-8 rounded-full font-bold shadow-md">+</button>
+                </div>
+                <div id="water-slots" class="flex gap-1 justify-between">
+                    <!-- Dynamic drops -->
+                </div>
+            </section>
+
+            <!-- Goals -->
+            <section class="glass-panel rounded-[2.5rem] p-6 min-h-[350px] flex flex-col">
+                <h3 class="font-bold mb-4">Daily Intentions</h3>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="goal-input" placeholder="New goal..." class="w-full bg-white/50 border-none rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none">
+                    <button onclick="addGoal()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold">ADD</button>
+                </div>
+                <div id="goal-list" class="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-2">
+                    <!-- Goals -->
+                </div>
+            </section>
+        </div>
     </main>
 
     <script>
-        const apiKey = ""; // Set by runtime
-        const SYSTEM_PROMPT = "You are an expert Wellness Coach. Provide concise, actionable, and science-backed advice. Keep responses empathetic but brief (under 3 sentences where possible). Focus on habit building, stress reduction, and mental clarity.";
+        // --- Initialization ---
+        window.onload = () => {
+            renderWater();
+            updateQuote();
+        };
 
-        // --- Navigation ---
-        function switchTab(tab) {
-            document.getElementById('section-dashboard').classList.toggle('hidden', tab !== 'dashboard');
-            document.getElementById('section-coach').classList.toggle('hidden', tab !== 'coach');
-            document.getElementById('tab-dashboard').classList.toggle('tab-active', tab === 'dashboard');
-            document.getElementById('tab-coach').classList.toggle('tab-active', tab === 'coach');
+        const quotes = [
+            "Your mind is like water. When it is agitated, it becomes difficult to see.",
+            "Within you, there is a stillness and a sanctuary.",
+            "Do not let the behavior of others destroy your inner peace.",
+            "Focus on the step you are taking, not the whole mountain."
+        ];
+        function updateQuote() {
+            document.getElementById('quote').innerText = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
         }
 
-        // --- AI API Integration with Exponential Backoff ---
-        async function fetchAIResponse(userPrompt, retries = 0) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: userPrompt }] }],
-                        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }
-                    })
-                });
-
-                if (response.status === 429 && retries < 5) {
-                    const backoff = Math.pow(2, retries) * 1000;
-                    await new Promise(resolve => setTimeout(resolve, backoff));
-                    return fetchAIResponse(userPrompt, retries + 1);
-                }
-
-                if (!response.ok) throw new Error("Connection Error");
-
-                const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm having trouble thinking clearly. Try asking again.";
-            } catch (error) {
-                return "I'm currently disconnected. Check your connection or try again later.";
-            }
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const chatBox = document.getElementById('chat-box');
-            const sendBtn = document.getElementById('send-btn');
-            const query = input.value.trim();
-
-            if (!query) return;
-
-            // Display User Message
-            appendMessage(query, 'user');
-            input.value = '';
-            input.disabled = true;
-            sendBtn.disabled = true;
-
-            // Display Thinking
-            const aiMsg = appendMessage("...", 'ai');
-
-            // Fetch Response
-            const reply = await fetchAIResponse(query);
-            aiMsg.innerText = reply;
-            
-            input.disabled = false;
-            sendBtn.disabled = false;
-            input.focus();
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function appendMessage(text, role) {
-            const chatBox = document.getElementById('chat-box');
-            const div = document.createElement('div');
-            const isUser = role === 'user';
-            div.className = `${isUser ? 'bg-white text-slate-800 ml-auto border border-slate-100' : 'bg-indigo-600 text-white mr-auto'} p-4 rounded-2xl shadow-sm text-sm max-w-[85%] animate-fade ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'}`;
-            div.innerText = text;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            return div;
-        }
-
-        // --- Core Dashboard Functionality ---
+        // --- Focus Timer ---
         let timerSeconds = 1500;
         let timerRunning = false;
         let timerInterval = null;
+        let sessions = 0;
 
-        function updateTimer() {
+        function updateTimerUI() {
             const mins = Math.floor(timerSeconds / 60);
             const secs = timerSeconds % 60;
             document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            const offset = 440 - (timerSeconds / 1500) * 440;
-            document.getElementById('timer-progress').style.strokeDashoffset = offset;
+            const ring = document.getElementById('timer-ring');
+            const circumference = 80 * 2 * Math.PI;
+            ring.style.strokeDashoffset = circumference - (timerSeconds / 1500) * circumference;
         }
 
         function toggleTimer() {
@@ -250,17 +209,18 @@
             if (timerRunning) {
                 clearInterval(timerInterval);
                 timerRunning = false;
-                btn.innerText = 'Resume';
+                btn.innerText = 'RESUME';
             } else {
                 timerRunning = true;
-                btn.innerText = 'Pause';
+                btn.innerText = 'PAUSE';
                 timerInterval = setInterval(() => {
                     if (timerSeconds > 0) {
                         timerSeconds--;
-                        updateTimer();
+                        updateTimerUI();
                     } else {
-                        clearInterval(timerInterval);
-                        toast("Great job! Session complete.");
+                        sessions++;
+                        document.getElementById('stat-sessions').innerText = sessions;
+                        notify("Focus session complete!");
                         resetTimer();
                     }
                 }, 1000);
@@ -271,63 +231,157 @@
             clearInterval(timerInterval);
             timerSeconds = 1500;
             timerRunning = false;
-            updateTimer();
-            document.getElementById('timer-btn').innerText = 'Start';
+            updateTimerUI();
+            document.getElementById('timer-btn').innerText = 'START';
         }
 
-        let breathActive = false;
+        // --- Sound Engine (The "Weird" Sounds) ---
+        let audioCtx = null;
+        let activeSource = null;
+        let activeSound = null;
+
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+        function createNoise(type) {
+            const bufferSize = 2 * audioCtx.sampleRate;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            if (type === 'office') {
+                filter.type = 'highpass';
+                filter.frequency.value = 1500;
+                gain.gain.value = 0.03;
+                // Add high buzz
+                const osc = audioCtx.createOscillator();
+                osc.frequency.value = 8000;
+                osc.connect(gain);
+                osc.start();
+                const stopAll = () => { source.stop(); osc.stop(); };
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer; source.loop = true;
+                source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+                return { start: () => source.start(), stop: stopAll };
+            } else if (type === 'underwater') {
+                filter.type = 'lowpass';
+                filter.frequency.value = 80;
+                gain.gain.value = 0.5;
+            } else if (type === 'eerie') {
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                osc1.type = 'sine'; osc2.type = 'sawtooth';
+                osc1.frequency.value = 40; osc2.frequency.value = 41.5;
+                osc1.connect(gain); osc2.connect(gain);
+                gain.gain.value = 0.05;
+                osc1.start(); osc2.start();
+                return { start: () => {}, stop: () => { osc1.stop(); osc2.stop(); } };
+            } else {
+                filter.type = 'bandpass'; filter.frequency.value = 500; gain.gain.value = 0.1;
+            }
+
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer; source.loop = true;
+            source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            return source;
+        }
+
+        function toggleSound(sound) {
+            initAudio();
+            if (activeSound === sound) {
+                activeSource.stop();
+                activeSource = null;
+                activeSound = null;
+                document.body.className = 'min-h-screen pb-12';
+            } else {
+                if (activeSource) activeSource.stop();
+                activeSource = createNoise(sound);
+                activeSource.start ? activeSource.start() : null;
+                activeSound = sound;
+                document.body.className = `min-h-screen pb-12 theme-${sound}`;
+            }
+        }
+
+        // --- Breathwork ---
+        let breathing = false;
         let breathInt = null;
         function toggleBreathing() {
-            const btn = document.getElementById('breathe-btn');
             const status = document.getElementById('breathe-status');
             const circle = document.getElementById('breathe-circle');
-            
-            if (breathActive) {
+            const btn = document.getElementById('breathe-btn');
+            if (breathing) {
                 clearInterval(breathInt);
-                breathActive = false;
-                btn.innerText = 'Begin Meditation';
-                status.innerText = 'Ready';
+                breathing = false;
+                status.innerText = "Idle";
                 circle.classList.remove('expanding');
+                btn.innerText = "Begin Session";
             } else {
-                breathActive = true;
-                btn.innerText = 'Stop Session';
-                const run = () => {
+                breathing = true;
+                btn.innerText = "Stop Session";
+                const cycle = () => {
                     status.innerText = "Inhale";
                     circle.classList.add('expanding');
-                    setTimeout(() => { 
-                        if(breathActive) { status.innerText = "Exhale"; circle.classList.remove('expanding'); }
-                    }, 4000);
+                    setTimeout(() => { if(breathing) { status.innerText = "Exhale"; circle.classList.remove('expanding'); }}, 4000);
                 };
-                run();
-                breathInt = setInterval(run, 8000);
+                cycle();
+                breathInt = setInterval(cycle, 8000);
             }
         }
 
+        // --- Habit Trackers ---
         let water = 0;
-        function addWater() {
-            if (water < 8) {
-                water++;
-                document.getElementById('water-count').innerText = water;
-                toast("Logged 1 cup of water. Stay hydrated! 💧");
+        function renderWater() {
+            const container = document.getElementById('water-slots');
+            container.innerHTML = '';
+            for(let i=0; i<8; i++) {
+                const drop = document.createElement('div');
+                drop.className = `h-8 w-4 rounded-full border-2 transition-all ${i < water ? 'bg-blue-500 border-blue-600' : 'border-blue-100'}`;
+                container.appendChild(drop);
             }
         }
-
-        function logMood(mood) {
-            toast(`Mood captured: ${mood}. How does that feel?`);
+        function addWater() {
+            if(water < 8) { water++; document.getElementById('stat-water').innerText = water; renderWater(); }
         }
 
-        function toast(msg) {
+        function logMood(emoji) { notify(`Logged mood: ${emoji}. Stay mindful!`); }
+
+        // --- Goal Logic ---
+        let goals = [];
+        function addGoal() {
+            const input = document.getElementById('goal-input');
+            if(!input.value.trim()) return;
+            goals.push({ id: Date.now(), text: input.value, done: false });
+            input.value = '';
+            renderGoals();
+        }
+        function renderGoals() {
+            const list = document.getElementById('goal-list');
+            list.innerHTML = '';
+            goals.forEach(g => {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-3 p-3 bg-white/50 rounded-2xl animate-in";
+                div.innerHTML = `
+                    <input type="checkbox" onchange="toggleGoal(${g.id})" ${g.done ? 'checked' : ''} class="w-4 h-4 accent-indigo-600">
+                    <span class="text-sm flex-1 ${g.done ? 'line-through opacity-50' : ''}">${g.text}</span>
+                    <button onclick="removeGoal(${g.id})" class="text-slate-300 hover:text-red-500">✕</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+        function toggleGoal(id) { goals = goals.map(g => g.id === id ? {...g, done: !g.done} : g); renderGoals(); }
+        function removeGoal(id) { goals = goals.filter(g => g.id !== id); renderGoals(); }
+
+        function notify(msg) {
             const t = document.createElement('div');
-            t.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl z-[100] animate-fade text-sm font-medium";
+            t.className = "fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-xl z-50 animate-in text-sm font-bold";
             t.innerText = msg;
             document.body.appendChild(t);
             setTimeout(() => t.remove(), 3000);
         }
-
-        document.getElementById('chat-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
     </script>
 </body>
 </html>
 
+    
